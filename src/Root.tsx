@@ -1,27 +1,29 @@
 import React from "react";
 import { Composition } from "remotion";
 import { BelajarWarna, type BelajarWarnaProps } from "./BelajarWarna";
-import { DAFTAR_WARNA, FPS, totalDurasi } from "./data/warna";
+import { buatTimeline } from "./data/timeline";
+import { DAFTAR_WARNA, FPS } from "./data/warna";
 
 const defaultProps: BelajarWarnaProps = {
   judul: "Belajar Warna",
   daftarWarna: DAFTAR_WARNA,
+  pakaiMusik: true,
 };
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* Video utama YouTube (16:9, Full HD) */}
+      {/* Video utama YouTube (16:9, Full HD). Durasi mengikuti panjang narasi. */}
       <Composition
         id="BelajarWarna"
         component={BelajarWarna}
         width={1920}
         height={1080}
         fps={FPS}
-        durationInFrames={totalDurasi(DAFTAR_WARNA.length)}
+        durationInFrames={buatTimeline(DAFTAR_WARNA).total}
         defaultProps={defaultProps}
         calculateMetadata={({ props }) => ({
-          durationInFrames: totalDurasi(props.daftarWarna.length),
+          durationInFrames: buatTimeline(props.daftarWarna).total,
         })}
       />
     </>

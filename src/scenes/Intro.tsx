@@ -1,10 +1,12 @@
 import React from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Gelembung } from "../components/Gelembung";
+import { Efek, Narasi } from "../components/Narasi";
+import type { TimingIntro } from "../data/timeline";
 import { DAFTAR_WARNA } from "../data/warna";
 import { fontFamily } from "../fonts";
 
-export const Intro: React.FC<{ judul: string }> = ({ judul }) => {
+export const Intro: React.FC<{ judul: string; timing: TimingIntro }> = ({ judul, timing }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const huruf = judul.split("");
@@ -14,6 +16,8 @@ export const Intro: React.FC<{ judul: string }> = ({ judul }) => {
   return (
     <AbsoluteFill style={{ background: "linear-gradient(180deg, #FFF8E1 0%, #E1F5FE 100%)", fontFamily }}>
       <Gelembung warna="#FFB300" seed="intro" />
+      <Efek nama="ting" frame={huruf.length * 3 + 8} volume={0.35} />
+      <Narasi klip={timing.narasi} />
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
         <div style={{ display: "flex", fontSize: 190, fontWeight: 700 }}>
           {huruf.map((h, i) => {

@@ -1,18 +1,22 @@
 import React from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Gelembung } from "../components/Gelembung";
+import { Efek, Narasi } from "../components/Narasi";
 import { Objek } from "../components/Objek";
+import type { TimingWarna } from "../data/timeline";
 import type { Warna } from "../data/warna";
 import { fontFamily } from "../fonts";
 
-export const AdeganWarna: React.FC<{ warna: Warna }> = ({ warna }) => {
+const MUNCUL_OBJEK = 5;
+
+export const AdeganWarna: React.FC<{ warna: Warna; timing: TimingWarna }> = ({ warna, timing }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const objekMasuk = spring({ frame: frame - 5, fps, config: { damping: 10 } });
-  const namaMasuk = spring({ frame: frame - 20, fps, config: { damping: 8, stiffness: 150 } });
-  const englishMasuk = spring({ frame: frame - 45, fps, config: { damping: 12 } });
-  const kalimatMasuk = spring({ frame: frame - 75, fps, config: { damping: 14 } });
+  const objekMasuk = spring({ frame: frame - MUNCUL_OBJEK, fps, config: { damping: 10 } });
+  const namaMasuk = spring({ frame: frame - timing.nama.mulai, fps, config: { damping: 8, stiffness: 150 } });
+  const englishMasuk = spring({ frame: frame - timing.english.mulai, fps, config: { damping: 12 } });
+  const kalimatMasuk = spring({ frame: frame - timing.kalimat.mulai, fps, config: { damping: 14 } });
 
   const memantul = Math.abs(Math.sin(frame / 9)) * -25;
   const denyut = 1 + Math.sin(frame / 7) * 0.03;
@@ -20,6 +24,10 @@ export const AdeganWarna: React.FC<{ warna: Warna }> = ({ warna }) => {
   return (
     <AbsoluteFill style={{ backgroundColor: warna.latar, fontFamily }}>
       <Gelembung warna={warna.hex} seed={warna.nama} />
+      <Efek nama="pop" frame={MUNCUL_OBJEK} volume={0.45} />
+      <Narasi klip={timing.nama} />
+      <Narasi klip={timing.english} />
+      <Narasi klip={timing.kalimat} />
 
       {/* Objek contoh */}
       <AbsoluteFill style={{ justifyContent: "center", paddingLeft: 180 }}>
