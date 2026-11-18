@@ -2,7 +2,7 @@
 
 Video edukasi anak untuk mengenal warna, dibuat dengan [Remotion](https://www.remotion.dev/) (video dari kode React).
 
-## Isi video (± 68 detik, 1920×1080, 30 fps, dengan narasi & musik)
+## Isi video (± 87 detik, 1920×1080, 30 fps, dengan narasi & musik)
 
 1. **Intro** — judul "Belajar Warna" dengan huruf warna-warni + narasi *"Halo teman-teman! Ayo kita belajar warna bersama-sama!"*
 2. **6 adegan warna** — Merah (apel), Kuning (matahari), Biru (ikan), Hijau (daun), Oranye (jeruk), Ungu (anggur). Narasi mengucapkan nama warna, nama Inggrisnya, dan kalimat contoh; teks muncul tepat saat diucapkan.
@@ -40,26 +40,40 @@ tools/                # skrip Python pembuat narasi & musik
 
 | File | Isi | Dibuat oleh |
 |---|---|---|
-| `public/narasi/*.mp3` | Narasi per kalimat | `tools/buat_narasi.py` (TTS) |
-| `src/data/durasi-narasi.json` | Durasi tiap narasi → menentukan timing video | `tools/buat_narasi.py` |
+| `public/narasi/*.mp3` | Narasi per kalimat (suara **Jessica**, ElevenLabs, gaya *excited*) | `tools/buat_narasi_elevenlabs.py` |
+| `src/data/durasi-narasi.json` | Durasi tiap narasi → menentukan timing video | skrip narasi |
 | `public/audio/musik-ceria.mp3` | Musik latar (marimba, ukulele, bas, perkusi; 124 BPM) | `tools/buat_musik.py` |
 | `public/audio/pop.mp3`, `ting.mp3` | Efek suara | `tools/buat_musik.py` |
 
 File audio sudah disertakan di repo, jadi `npm run render` langsung jalan. Buat ulang hanya jika ingin mengubah narasi/musik.
 
-### Mengubah narasi
+### Mengubah narasi (ElevenLabs)
 
-1. Edit teks yang diucapkan di `src/data/naskah.json`. Ejaan sebagian sengaja dibuat "sesuai bunyi" agar TTS melafalkan dengan benar (mis. `unggu`, `Yelou`, `Perpel`).
+1. Edit teks yang diucapkan di `src/data/naskah.json`.
 2. Buat ulang suaranya:
    ```bash
-   pip install -r tools/requirements.txt   # sherpa-onnx + numpy (butuh juga ffmpeg)
-   bash tools/unduh_model_suara.sh          # model suara Indonesia + Whisper (±600 MB)
-   python tools/buat_narasi.py              # semua kalimat
-   python tools/buat_narasi.py merah-nama   # atau kalimat tertentu saja
+   export ELEVENLABS_API_KEY=sk_...                 # di Claude Code cloud tidak perlu (key dipasang otomatis)
+   python tools/buat_narasi_elevenlabs.py           # hanya kalimat yang berubah (hemat kuota)
+   python tools/buat_narasi_elevenlabs.py merah-nama   # paksa buat ulang kalimat tertentu
    ```
-   Skrip membuat hingga 8 versi per kalimat lalu memilih yang paling jelas menurut pengenal suara Whisper.
-   Nada & kecepatan suara diatur lewat `NADA` dan `KECEPATAN` di `tools/buat_narasi.py`.
+   Hanya butuh Python 3 dan ffmpeg. `tools/narasi-cache.json` mencatat kalimat yang sudah dibuat.
 3. Durasi video menyesuaikan otomatis.
+
+Pengaturan di `tools/buat_narasi_elevenlabs.py`:
+- `SUARA_ID`, `MODEL`, `GAYA` — suara, model (`eleven_v3`), dan tag gaya (`[excited]`).
+- `EJAAN_TTS` — ejaan khusus suara agar kata Indonesia terucap benar (mis. `ungu` → `unggu`). Tulisan di layar tidak berubah.
+- `SEED_KHUSUS` — kalau satu kalimat terdengar kurang jelas, coba seed lain untuk kalimat itu.
+
+Biaya: naskah ini ±1.000 karakter. Paket Free ElevenLabs (10.000 karakter/bulan) **tidak untuk pemakaian komersial** — untuk video yang dimonetisasi, pakai paket berbayar (minimal Starter) saat membuat narasi final.
+
+### Alternatif: suara lokal gratis (tanpa API key)
+
+```bash
+pip install -r tools/requirements.txt
+bash tools/unduh_model_suara.sh          # model suara Indonesia + Whisper (±600 MB)
+python tools/buat_narasi.py
+```
+Kualitasnya di bawah ElevenLabs (suara gaya pembaca berita), tapi gratis & offline.
 
 **Mau suara manusia sungguhan?** Rekam sendiri dengan nama file yang sama (mis. `public/narasi/merah-nama.mp3`), lalu perbarui angka detiknya di `src/data/durasi-narasi.json`.
 
@@ -70,7 +84,7 @@ Volume musik & ducking: `src/components/MusikLatar.tsx`. Untuk mematikan musik, 
 
 ## Mengubah konten
 
-- **Tambah/ubah warna:** edit `DAFTAR_WARNA` di `src/data/warna.ts`, tambahkan kalimat `<id>-nama`, `<id>-english`, `<id>-kalimat`, `outro-<id>` di `src/data/naskah.json`, lalu jalankan `python tools/buat_narasi.py`.
+- **Tambah/ubah warna:** edit `DAFTAR_WARNA` di `src/data/warna.ts`, tambahkan kalimat `<id>-nama`, `<id>-english`, `<id>-kalimat`, `outro-<id>` di `src/data/naskah.json`, lalu jalankan `python tools/buat_narasi_elevenlabs.py`.
 - **Objek baru:** tambah gambar SVG di `src/components/Objek.tsx` dan nama objeknya di tipe `NamaObjek`.
 - **Tempo / jeda antar kalimat:** ubah `JEDA` di `src/data/timeline.ts`.
 
@@ -78,5 +92,5 @@ Volume musik & ducking: `src/components/MusikLatar.tsx`. Untuk mematikan musik, 
 
 - Render pertama kali akan mengunduh Chrome Headless Shell. Jika jaringan dibatasi, pakai browser yang sudah ada:
   `npx remotion render BelajarWarna out/belajar-warna.mp4 --browser-executable=/path/ke/chrome`
-- **Lisensi audio:** musik & efek suara dibuat sendiri dari nol oleh `tools/buat_musik.py`, jadi bebas hak cipta. Suara narasi memakai model Piper `id_ID-news_tts-medium` (via sherpa-onnx); periksa lisensi dataset model ini sebelum memonetisasi, atau ganti dengan rekaman suara sendiri.
+- **Lisensi audio:** musik & efek suara dibuat sendiri dari nol oleh `tools/buat_musik.py`, jadi bebas hak cipta. Narasi dibuat dengan ElevenLabs: lisensi komersial hanya berlaku jika dibuat dengan paket berbayar.
 - Remotion gratis untuk individu & tim kecil; perusahaan besar butuh lisensi — lihat https://www.remotion.dev/license.

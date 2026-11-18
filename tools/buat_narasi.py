@@ -1,4 +1,7 @@
-"""Membuat file narasi (suara) dari src/data/naskah.json.
+"""Membuat file narasi dengan suara TTS LOKAL (gratis, offline) dari src/data/naskah.json.
+
+Suara utama video memakai ElevenLabs (tools/buat_narasi_elevenlabs.py).
+Skrip ini adalah alternatif tanpa API key.
 
 Hasil:
   public/narasi/<id>.mp3          satu file per kalimat
@@ -36,10 +39,11 @@ MODEL_ASR = AKAR / "tools" / "model" / "sherpa-onnx-whisper-small"
 JUMLAH_KANDIDAT = 8
 SKOR_CUKUP = 0.97     # berhenti lebih awal jika kandidat sudah sejelas ini
 
-# Ejaan "untuk diucapkan" -> ejaan yang diharapkan terdengar (untuk menilai kandidat)
-EJAAN_DIHARAPKAN = {
-    "unggu": "ungu", "yelou": "yellow", "blu": "blue", "grin": "green",
-    "orens": "orange", "perpel": "purple",
+# Suara lokal ini salah melafalkan beberapa kata, jadi sebelum diucapkan
+# kata-kata ini diganti dengan ejaan "sesuai bunyi".
+EJAAN_TTS = {
+    "ungu": "unggu", "Yellow": "Yelou", "Blue": "Blu", "Green": "Grin",
+    "Orange": "Orens", "Purple": "Perpel",
 }
 NASKAH = AKAR / "src" / "data" / "naskah.json"
 DURASI = AKAR / "src" / "data" / "durasi-narasi.json"
@@ -85,8 +89,13 @@ def potong_hening(x: np.ndarray, sr: int, ambang=0.01, sisa=0.05) -> np.ndarray:
 
 
 def normalisasi(teks: str) -> str:
-    kata = re.sub(r"[^a-z\s]", " ", teks.lower()).split()
-    return " ".join(EJAAN_DIHARAPKAN.get(k, k) for k in kata)
+    return " ".join(re.sub(r"[^a-z\s]", " ", teks.lower()).split())
+
+
+def ejaan_tts(teks: str) -> str:
+    for asli, bunyi in EJAAN_TTS.items():
+        teks = re.sub(rf"\b{asli}\b", bunyi, teks)
+    return teks
 
 
 def buat_asr():
@@ -150,7 +159,7 @@ def main():
         for i in range(n):
             # variasi kecepatan kecil supaya kandidat berbeda-beda
             kec = KECEPATAN if i == 0 else KECEPATAN * rng.uniform(0.94, 1.04)
-            audio = tts.generate(teks, sid=0, speed=kec)
+            audio = tts.generate(ejaan_tts(teks), sid=0, speed=kec)
             x = potong_hening(np.array(audio.samples, dtype=np.float32), audio.sample_rate)
             mentah, bernada = tmp / f"m{i}.wav", tmp / f"p{i}.wav"
             simpan_wav(mentah, x, audio.sample_rate)
