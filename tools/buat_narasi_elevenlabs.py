@@ -43,14 +43,13 @@ SEED_KHUSUS = {
     "merah-nama": 42,
     "oranye-kalimat": 42,
     "outro-oranye": 99,
-    "ungu-kalimat": 7,
 }
 LOUDNESS = -16                      # target LUFS
 
 # Suara Jessica berlogat Amerika; beberapa kata Indonesia perlu ejaan "sesuai bunyi"
 # supaya terucap benar. Hanya untuk suara — tulisan di layar tidak berubah.
 EJAAN_TTS = {
-    "ungu": "unggu",
+    "ungu": "u-ngu",       # "unggu" malah terdengar ada bunyi g; "u-ngu" paling pas
     "oranye": "oranyé",
 }
 
